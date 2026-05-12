@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Resumes - Resume Craft</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000000;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,215,0,.03) 35px, rgba(255,215,0,.03) 70px);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #000000;
+            padding: 30px 50px;
+            border-bottom: 4px solid #FFD700;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: #FFD700;
+            letter-spacing: 4px;
+        }
+
+        .user-info {
+            font-family: 'Space Mono', monospace;
+            color: #999;
+        }
+
+        .btn {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            font-weight: 700;
+            padding: 12px 25px;
+            border: 3px solid #FFD700;
+            background: transparent;
+            color: #FFD700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-decoration: none;
+            display: inline-block;
+            margin-left: 20px;
+        }
+
+        .btn:hover {
+            background: #FFD700;
+            color: #000000;
+        }
+
+        .btn-primary {
+            background: #FFD700;
+            color: #000000;
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: #FFD700;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 50px auto;
+            padding: 0 50px;
+        }
+
+        .page-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3.5rem;
+            color: #FFD700;
+            margin-bottom: 40px;
+            letter-spacing: 3px;
+        }
+
+        .resumes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 50px;
+        }
+
+        .resume-card {
+            background: #1a1a1a;
+            border: 4px solid #333;
+            padding: 25px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .resume-card:hover {
+            border-color: #FFD700;
+            transform: translateY(-5px);
+        }
+
+        .resume-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.8rem;
+            color: #FFD700;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+        }
+
+        .resume-meta {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: #666;
+            margin-bottom: 15px;
+        }
+
+        .resume-preview {
+            background: #fff;
+            color: #000;
+            padding: 15px;
+            font-size: 0.7rem;
+            max-height: 200px;
+            overflow: hidden;
+            margin-bottom: 15px;
+            border: 2px solid #333;
+        }
+
+        .resume-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .resume-actions button {
+            flex: 1;
+            padding: 10px;
+            font-size: 0.8rem;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .empty-state h2 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+
+        .empty-state p {
+            font-family: 'Space Mono', monospace;
+            color: #666;
+            margin-bottom: 30px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+            font-family: 'Space Mono', monospace;
+            color: #FFD700;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <div class="logo">RESUME CRAFT</div>
+        </div>
+        <div>
+            <span class="user-info" id="userName">Loading...</span>
+            <a href="/app.html" class="btn btn-primary">+ Create New Resume</a>
+            <button class="btn" onclick="logout()">Logout</button>
+        </div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">MY SAVED RESUMES</h1>
+
+        <div id="loading" class="loading">
+            Loading your resumes...
+        </div>
+
+        <div id="emptyState" class="empty-state" style="display: none;">
+            <h2>NO RESUMES YET</h2>
+            <p>Create your first ATS-optimized resume to get started</p>
+            <a href="/app.html" class="btn btn-primary">Create Resume</a>
+        </div>
+
+        <div id="resumesGrid" class="resumes-grid" style="display: none;"></div>
+    </div>
+
+    <!-- PDF Preview Modal -->
+    <div id="previewModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; overflow-y: auto;">
+        <div style="max-width: 1200px; margin: 50px auto; padding: 50px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
+                <h2 style="font-family: 'Bebas Neue', sans-serif; font-size: 3rem; color: #FFD700; letter-spacing: 3px;">RESUME PREVIEW</h2>
+                <button class="btn" onclick="closePreview()" style="font-size: 1.5rem; padding: 10px 30px;">✕ CLOSE</button>
+            </div>
+
+            <div style="background: #1a1a1a; border: 4px solid #FFD700; padding: 40px; margin-bottom: 30px;">
+                <div style="background: #ffffff; padding: 20px; max-height: 800px; overflow-y: auto;">
+                    <canvas id="previewCanvas"></canvas>
+                </div>
+            </div>
+
+            <div style="background: #1a1a1a; border: 4px solid #333; padding: 30px; margin-bottom: 30px;">
+                <h3 style="font-family: 'Bebas Neue', sans-serif; font-size: 2rem; color: #FFD700; margin-bottom: 20px; letter-spacing: 2px;">DOWNLOAD OPTIONS</h3>
+                <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;">
+                    <button class="btn btn-primary" id="previewDownloadPDF">📄 Download PDF</button>
+                    <button class="btn" id="previewDownloadTXT">📋 Download TXT</button>
+                    <button class="btn" onclick="closePreview()">← Back to Dashboard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let currentUser = null;
+        let currentResumeData = null;
+        let currentResumePDF = null;
+
+        // Check login and load resumes
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const checkResponse = await fetch('/auth/check', { credentials: 'include' });
+                const checkData = await checkResponse.json();
+
+                if (!checkData.loggedIn) {
+                    window.location.href = '/';
+                    return;
+                }
+
+                currentUser = checkData.user;
+                document.getElementById('userName').textContent = `Welcome, ${currentUser.name || currentUser.email}`;
+
+                // Load resumes
+                const resumesResponse = await fetch('/auth/resumes', { credentials: 'include' });
+                const resumesData = await resumesResponse.json();
+
+                document.getElementById('loading').style.display = 'none';
+
+                if (resumesData.resumes.length === 0) {
+                    document.getElementById('emptyState').style.display = 'block';
+                } else {
+                    displayResumes(resumesData.resumes);
+                }
+
+            } catch (error) {
+                console.error('Error:', error);
+                window.location.href = '/';
+            }
+        });
+
+        function displayResumes(resumes) {
+            const grid = document.getElementById('resumesGrid');
+            grid.style.display = 'grid';
+
+            grid.innerHTML = resumes.map(resume => `
+                <div class="resume-card">
+                    <div class="resume-title">${resume.title}</div>
+                    <div class="resume-meta">
+                        Created: ${new Date(resume.created_at).toLocaleDateString()} • 
+                        Template: ${resume.template.toUpperCase()} • 
+                        Font: ${resume.font.toUpperCase()}
+                    </div>
+                    <div class="resume-actions">
+                        <button class="btn btn-primary" onclick="viewResume(${resume.id})">View</button>
+                        <button class="btn" onclick="deleteResume(${resume.id})">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function viewResume(id) {
+            try {
+                const response = await fetch(`/auth/resumes/${id}`, { credentials: 'include' });
+                const data = await response.json();
+
+                if (data.resume) {
+                    currentResumeData = data.resume;
+                    
+                    // Generate PDF from resume content
+                    await generatePDFPreview(data.resume.content, data.resume.template, data.resume.font);
+                    
+                    // Show modal
+                    document.getElementById('previewModal').style.display = 'block';
+                    document.body.style.overflow = 'hidden';
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to load resume');
+            }
+        }
+
+        async function generatePDFPreview(text, template, font) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Clean text
+            text = text
+                .replace(/_{2,}/g, '')
+                .replace(/\*{1,}/g, '')
+                .replace(/^[\*\-]\s/gm, '• ')
+                .trim();
+            
+            const fonts = {
+                'modern': { heading: 'helvetica', body: 'helvetica' },
+                'professional': { heading: 'helvetica', body: 'times' },
+                'classic': { heading: 'times', body: 'times' },
+                'tech': { heading: 'courier', body: 'helvetica' }
+            };
+
+            const selectedFont = fonts[font] || fonts.modern;
+            const lines = text.split('\n');
+            let yPos = 20;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+            const contentWidth = pageWidth - (margin * 2);
+
+            function isSectionHeader(line) {
+                const trimmed = line.trim();
+                return trimmed === trimmed.toUpperCase() && 
+                       trimmed.length > 0 && 
+                       trimmed.length < 40 &&
+                       !trimmed.startsWith('•') &&
+                       !trimmed.includes('@') &&
+                       !trimmed.includes('|');
+            }
+
+            // Apply template styling (simplified version)
+            for (let line of lines) {
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+
+                if (isSectionHeader(line)) {
+                    doc.setFont(selectedFont.heading, 'bold');
+                    doc.setFontSize(12);
+                    doc.text(line.trim(), margin, yPos);
+                    yPos += 10;
+                } else if (line.trim().length > 0) {
+                    doc.setFont(selectedFont.body, 'normal');
+                    doc.setFontSize(10);
+                    const wrappedLines = doc.splitTextToSize(line, contentWidth);
+                    doc.text(wrappedLines, margin, yPos);
+                    yPos += wrappedLines.length * 5 + 1;
+                } else {
+                    yPos += 2;
+                }
+            }
+
+            currentResumePDF = doc;
+
+            // Render preview
+            const pdfBlob = doc.output('blob');
+            const pdfURL = URL.createObjectURL(pdfBlob);
+            const loadingTask = pdfjsLib.getDocument(pdfURL);
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+            const canvas = document.getElementById('previewCanvas');
+            const context = canvas.getContext('2d');
+            const viewport = page.getViewport({ scale: 1.5 });
+
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+        }
+
+        function closePreview() {
+            document.getElementById('previewModal').style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        document.getElementById('previewDownloadPDF').addEventListener('click', () => {
+            if (currentResumePDF) {
+                currentResumePDF.save(currentResumeData.title + '.pdf');
+            }
+        });
+
+        document.getElementById('previewDownloadTXT').addEventListener('click', () => {
+            if (currentResumeData) {
+                const blob = new Blob([currentResumeData.content], { type: 'text/plain' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = currentResumeData.title + '.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+        });
+
+        async function deleteResume(id) {
+            if (!confirm('Are you sure you want to delete this resume?')) return;
+
+            try {
+                const response = await fetch(`/auth/resumes/${id}`, {
+                    method: 'DELETE',
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    alert('Resume deleted successfully');
+                    window.location.reload();
+                } else {
+                    alert('Failed to delete resume');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to delete resume');
+            }
+        }
+
+        async function logout() {
+            await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+            window.location.href = '/';
+        }
+    </script>
+</body>
+</html>

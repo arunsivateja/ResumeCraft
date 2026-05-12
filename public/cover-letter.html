@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cover Letter - Resume Craft</title>
+    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://unpkg.com/docx@7.8.2/build/index.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000000;
+            background-image: 
+                repeating-linear-gradient(45deg, transparent, transparent 35px, rgba(255,215,0,.03) 35px, rgba(255,215,0,.03) 70px);
+            color: #ffffff;
+            min-height: 100vh;
+        }
+
+        header {
+            background: #000000;
+            padding: 30px 50px;
+            border-bottom: 4px solid #FFD700;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: #FFD700;
+            letter-spacing: 4px;
+        }
+
+        .tagline {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 5px;
+            letter-spacing: 2px;
+        }
+
+        .user-info {
+            position: absolute;
+            top: 30px;
+            right: 50px;
+            text-align: right;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 50px auto;
+            padding: 0 50px;
+        }
+
+        .page-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 3rem;
+            color: #FFD700;
+            margin-bottom: 10px;
+            letter-spacing: 3px;
+        }
+
+        .page-subtitle {
+            font-family: 'Space Mono', monospace;
+            color: #999;
+            margin-bottom: 40px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+            font-family: 'Space Mono', monospace;
+            font-size: 1.2rem;
+            color: #FFD700;
+        }
+
+        .spinner {
+            border: 4px solid #333;
+            border-top: 4px solid #FFD700;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 20px auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .preview-section {
+            background: #1a1a1a;
+            border: 4px solid #FFD700;
+            padding: 40px;
+            margin-bottom: 30px;
+        }
+
+        .pdf-preview {
+            background: #ffffff;
+            padding: 20px;
+            overflow-x: auto;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        canvas {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .download-section {
+            background: #1a1a1a;
+            border: 4px solid #333;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+
+        .download-section h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+            letter-spacing: 2px;
+        }
+
+        .download-buttons {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .btn {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            font-weight: 700;
+            padding: 20px 40px;
+            border: 3px solid #FFD700;
+            background: transparent;
+            color: #FFD700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .btn:hover {
+            background: #FFD700;
+            color: #000000;
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background: #FFD700;
+            color: #000000;
+        }
+
+        .btn-primary:hover {
+            background: transparent;
+            color: #FFD700;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .download-buttons {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="logo">RESUME CRAFT</div>
+        <div class="tagline">ATS RESUME OPTIMIZER</div>
+    </header>
+
+    <div class="container">
+        <h1 class="page-title">YOUR COVER LETTER</h1>
+        <p class="page-subtitle">Personalized for the role - Download in your preferred format</p>
+
+        <div id="loadingSection" class="loading">
+            <div class="spinner"></div>
+            Crafting your personalized cover letter...
+        </div>
+
+        <div id="previewSection" style="display: none;">
+            <div class="preview-section">
+                <div class="pdf-preview">
+                    <canvas id="coverLetterCanvas"></canvas>
+                </div>
+            </div>
+
+            <div class="download-section">
+                <h3>Download Your Cover Letter</h3>
+                <div class="download-buttons">
+                    <button class="btn btn-primary" id="downloadPDF">📄 Download PDF</button>
+                    <button class="btn" id="downloadDOCX">📝 Download DOCX</button>
+                    <button class="btn" id="downloadTXT">📋 Download TXT</button>
+                </div>
+            </div>
+
+            <div class="navigation">
+                <button class="btn" onclick="window.location.href='/app.html'">← Back to Resume</button>
+                <button class="btn btn-primary" onclick="window.location.href='/job-suggestions.html'">Job Suggestions →</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        let coverLetterText = '';
+        let coverLetterPDF = null;
+
+        // Generate cover letter on page load
+        window.addEventListener('DOMContentLoaded', async () => {
+            const resume = sessionStorage.getItem('generatedResume');
+            const jobDescription = sessionStorage.getItem('jobDescription');
+
+            if (!resume || !jobDescription) {
+                alert('Missing data. Redirecting back...');
+                window.location.href = '/app.html';
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/generate-cover-letter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ resume, jobDescription })
+                });
+
+                const data = await response.json();
+                coverLetterText = data.optimizedResume;
+
+                await createPDFPreview(coverLetterText);
+
+                document.getElementById('loadingSection').style.display = 'none';
+                document.getElementById('previewSection').style.display = 'block';
+
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate cover letter. Please try again.');
+                window.location.href = '/app.html';
+            }
+        });
+
+        async function createPDFPreview(text) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            const lines = text.split('\n');
+            let yPos = 20;
+            const margin = 15;
+            const contentWidth = doc.internal.pageSize.getWidth() - (margin * 2);
+
+            doc.setFont('times', 'normal');
+            doc.setFontSize(11);
+
+            for (let line of lines) {
+                if (yPos > 270) {
+                    doc.addPage();
+                    yPos = 20;
+                }
+
+                if (line.trim().length > 0) {
+                    const wrappedLines = doc.splitTextToSize(line, contentWidth);
+                    doc.text(wrappedLines, margin, yPos);
+                    yPos += wrappedLines.length * 6;
+                } else {
+                    yPos += 6;
+                }
+            }
+
+            coverLetterPDF = doc;
+
+            // Preview
+            const pdfBlob = doc.output('blob');
+            const pdfURL = URL.createObjectURL(pdfBlob);
+            const loadingTask = pdfjsLib.getDocument(pdfURL);
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+            const canvas = document.getElementById('coverLetterCanvas');
+            const context = canvas.getContext('2d');
+            const viewport = page.getViewport({ scale: 1.5 });
+
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+        }
+
+        document.getElementById('downloadPDF').addEventListener('click', () => {
+            if (coverLetterPDF) {
+                coverLetterPDF.save('cover-letter.pdf');
+            }
+        });
+
+        document.getElementById('downloadTXT').addEventListener('click', () => {
+            const blob = new Blob([coverLetterText], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'cover-letter.txt';
+            a.click();
+            URL.revokeObjectURL(url);
+        });
+
+        document.getElementById('downloadDOCX').addEventListener('click', async () => {
+            const { Document, Packer, Paragraph, TextRun } = docx;
+            
+            // Split text into paragraphs
+            const paragraphs = coverLetterText.split('\n').map(line => 
+                new Paragraph({
+                    children: [new TextRun(line.trim())],
+                    spacing: { after: 200 }
+                })
+            );
+
+            const doc = new Document({
+                sections: [{
+                    properties: {},
+                    children: paragraphs
+                }]
+            });
+
+            const blob = await Packer.toBlob(doc);
+            saveAs(blob, 'cover-letter.docx');
+        });
+    </script>
+</body>
+</html>

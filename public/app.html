@@ -1,0 +1,1566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Craft - ATS Resume Optimizer</title>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Inter:wght@400;500;600;700&family=Bebas+Neue&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: #000000;
+            color: #ffffff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: repeating-linear-gradient(
+                45deg,
+                #000000,
+                #000000 20px,
+                #0a0a0a 20px,
+                #0a0a0a 40px
+            );
+            z-index: -1;
+        }
+
+        /* Header */
+        header {
+            background: #000000;
+            border-bottom: 4px solid #FFD700;
+            padding: 30px 60px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2.5rem;
+            color: #FFD700;
+            letter-spacing: 8px;
+        }
+
+        .tagline {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: #ffffff;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .user-info {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: #FFD700;
+            display: none;
+        }
+
+        .user-info.show {
+            display: block;
+        }
+
+        .auth-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-header {
+            padding: 10px 20px;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 2px solid #FFD700;
+            background: transparent;
+            color: #FFD700;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .btn-header:hover {
+            background: #FFD700;
+            color: #000000;
+        }
+
+        /* Progress Bar */
+        .progress-container {
+            background: #1a1a1a;
+            padding: 30px 60px;
+            border-bottom: 2px solid #FFD700;
+        }
+
+        .progress-steps {
+            display: flex;
+            justify-content: space-between;
+            position: relative;
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 20px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: #333;
+            z-index: 0;
+        }
+
+        .progress-line-fill {
+            height: 100%;
+            background: #FFD700;
+            transition: width 0.5s;
+            width: 0%;
+        }
+
+        .progress-step {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            flex: 1;
+        }
+
+        .step-circle {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #333;
+            border: 3px solid #333;
+            margin: 0 auto 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.2rem;
+            color: #666;
+            transition: all 0.3s;
+        }
+
+        .progress-step.active .step-circle {
+            background: #FFD700;
+            border-color: #FFD700;
+            color: #000;
+        }
+
+        .progress-step.completed .step-circle {
+            background: #000;
+            border-color: #FFD700;
+            color: #FFD700;
+        }
+
+        .step-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .progress-step.active .step-label {
+            color: #FFD700;
+        }
+
+        /* Main Content */
+        .wizard-container {
+            max-width: 1100px;   /* 🔥 reduce width */
+            margin: 0 auto;
+            padding: 60px;
+        }
+
+        #step3 .selection-grid,
+        #step4 .selection-grid {
+                max-width: 1400px;
+                margin: 0 auto;
+        }
+
+        .step-content {
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+
+        .step-content.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .step-header {
+            margin-bottom: 40px;
+        }
+
+        .step-number {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 5rem;
+            color: #FFD700;
+            line-height: 1;
+            margin-bottom: 10px;
+        }
+
+        .step-title {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: #ffffff;
+            letter-spacing: 3px;
+        }
+
+        /* Upload Area */
+        .upload-area {
+            border: 4px dashed #FFD700;
+            padding: 80px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: rgba(255, 215, 0, 0.05);
+        }
+
+        .upload-area:hover {
+            background: rgba(255, 215, 0, 0.1);
+            border-style: solid;
+        }
+
+        .upload-area.dragover {
+            background: rgba(255, 215, 0, 0.2);
+            border-color: #fff;
+        }
+
+        .upload-icon {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 4rem;
+            color: #FFD700;
+            margin-bottom: 20px;
+        }
+
+        .upload-text {
+            font-family: 'Space Mono', monospace;
+            font-size: 1.1rem;
+            color: #ffffff;
+            margin-bottom: 10px;
+        }
+
+        .upload-hint {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.85rem;
+            color: #999;
+        }
+
+        .file-preview {
+            display: none;
+            padding: 30px;
+            background: #1a1a1a;
+            border: 3px solid #FFD700;
+            margin-top: 30px;
+        }
+
+        .file-preview.show {
+            display: block;
+        }
+
+        .file-name {
+            font-family: 'Space Mono', monospace;
+            font-size: 1rem;
+            color: #FFD700;
+            margin-bottom: 10px;
+        }
+
+        .file-remove {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.8rem;
+            color: #ff4444;
+            cursor: pointer;
+            text-decoration: underline;
+        }
+
+        /* Textarea */
+        textarea {
+            width: 100%;
+            min-height: 400px;
+            padding: 30px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            background: #1a1a1a;
+            color: #ffffff;
+            border: 3px solid #FFD700;
+            resize: vertical;
+        }
+
+        textarea::placeholder {
+            color: #666;
+        }
+
+        textarea:focus {
+            outline: none;
+            border-color: #fff;
+        }
+
+        .char-count {
+            text-align: right;
+            margin-top: 10px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.75rem;
+            color: #666;
+        }
+
+        /* Template/Font Selection */
+        .selection-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);  /* 🔥 FIXED 4 columns */
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        /* Force all 4 cards in ONE row - no scrolling! */
+        #templateGrid,
+        #fontGrid {
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            max-width: 100%;
+        }
+
+        .selection-card {
+            border: 4px solid #000000;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #ffffff;
+            position: relative;
+            overflow: hidden;
+
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .selection-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 8px 8px 0 #FFD700;
+        }
+
+        .selection-card.selected {
+            border-color: #FFD700;
+            box-shadow: 0 0 0 4px #000000;
+        }
+
+        .selection-card.selected::before {
+            content: '✓';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #FFD700;
+            color: #000000;
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 1.2rem;
+            z-index: 10;
+            border: 3px solid #000000;
+        }
+
+        .template-preview {
+            height: 300px;   /* increase from 350 */
+            background: #f5f5f5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            border-bottom: 4px solid #000000;
+        }
+
+        .template-preview-content {
+            width: 100%;
+            height: 100%;
+            background: #ffffff;
+            border: 2px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            font-size: 0.7rem;
+            color: #000000;
+            justify-content: flex-start;
+
+            transform: scale(1);
+            transform-origin: top;
+        }
+
+        /* Minimal Template */
+        .preview-minimal .template-preview-content {
+            font-family: Arial, sans-serif;
+        }
+
+        .preview-minimal .preview-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid #333333;
+        }
+
+        .preview-minimal .preview-section {
+            margin-top: 10px;
+        }
+
+        .preview-minimal .preview-section-title {
+            font-weight: 700;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        /* Bold Template */
+        .preview-bold .template-preview-content {
+            font-family: 'Roboto', sans-serif;
+        }
+
+        .preview-bold .preview-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .preview-bold .preview-section-title {
+            background: #000000;
+            color: #ffffff;
+            padding: 3px 8px;
+            font-weight: 700;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+            margin-top: 8px;
+        }
+
+        /* Modern Template */
+        .preview-modern .template-preview-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 10px;
+            font-family: 'Open Sans', sans-serif;
+        }
+
+        .preview-modern .preview-name {
+            grid-column: 1 / -1;
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            padding-bottom: 8px;
+            border-bottom: 3px solid #FFD700;
+        }
+
+        .preview-modern .preview-sidebar {
+            background: #f0f0f0;
+            padding: 8px;
+        }
+
+        /* Classic Template */
+        .preview-classic .template-preview-content {
+            font-family: 'Times New Roman', serif;
+        }
+
+        .preview-classic .preview-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 8px;
+            border-bottom: 1px solid #000000;
+            padding-bottom: 5px;
+        }
+
+        .preview-classic .preview-section-title {
+            font-weight: 700;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            margin-bottom: 3px;
+            text-decoration: underline;
+        }
+
+        .template-name {
+            padding: 15px 20px;
+            background: #000000;
+            color: #FFD700;
+            font-family: 'Space Mono', monospace;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-size: 0.9rem;
+        }
+
+        .template-description {
+            padding: 12px 15px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            color: #666666;
+            line-height: 1.3;
+        }
+
+        /* Checkbox */
+        .checkbox-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: #1a1a1a;
+            border: 3px solid #333;
+        }
+
+        .checkbox-container input[type="checkbox"] {
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+        }
+
+        .checkbox-container label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.9rem;
+            color: #ffffff;
+            cursor: pointer;
+        }
+
+        .checkbox-hint {
+            font-size: 0.75rem;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        /* Buttons */
+        .button-group {
+            display: flex;
+            gap: 20px;
+            justify-content: space-between;
+            margin-top: 60px;
+        }
+
+        .btn {
+            padding: 20px 50px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 1.5rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            border: 4px solid #FFD700;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: transparent;
+            color: #FFD700;
+        }
+
+        .btn:hover {
+            background: #FFD700;
+            color: #000;
+            transform: translateY(-3px);
+        }
+
+        .btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: #FFD700;
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #000;
+            color: #FFD700;
+        }
+
+        /* PDF Preview */
+        .pdf-preview-container {
+            background: #1a1a1a;
+            border: 4px solid #FFD700;
+            padding: 40px;
+            max-height: 800px;
+            overflow-y: auto;
+        }
+
+        #pdfCanvas {
+            width: 100%;
+            border: 2px solid #333;
+            background: #fff;
+        }
+
+        .download-section {
+            margin-top: 40px;
+            padding: 40px;
+            background: #1a1a1a;
+            border: 4px solid #FFD700;
+            text-align: center;
+        }
+
+        .download-section h3 {
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: #FFD700;
+            margin-bottom: 30px;
+            letter-spacing: 3px;
+        }
+
+        .download-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px;
+            font-family: 'Bebas Neue', sans-serif;
+            font-size: 2rem;
+            color: #FFD700;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header, .progress-container, .wizard-container {
+                padding: 20px;
+            }
+
+            .logo {
+                font-size: 1.8rem;
+            }
+
+            .step-number {
+                font-size: 3rem;
+            }
+
+            .upload-area {
+                padding: 40px 20px;
+            }
+
+            .button-group {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+
+            /* Show 2 columns on mobile for templates/fonts */
+            #templateGrid{
+                grid-template-columns: repeat(4, minmax(260px, 1fr));
+                gap: 30px;
+            }
+
+            #fontGrid {
+                display: grid;
+                grid-template-columns: repeat(4, minmax(220px, 1fr));
+                gap: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div>
+            <h1 class="logo">RESUME CRAFT</h1>
+            <p class="tagline">ATS Resume Optimizer</p>
+        </div>
+        <div>
+            <div class="user-info" id="userInfo"></div>
+            <div class="auth-buttons">
+                <a href="/dashboard.html" class="btn-header" id="dashboardLink" style="display: none;">My Resumes</a>
+                <a href="/" class="btn-header" id="loginLink">Login</a>
+                <button class="btn-header" id="logoutBtn" style="display: none;">Logout</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="progress-container">
+        <div class="progress-steps">
+            <div class="progress-line">
+                <div class="progress-line-fill" id="progressFill"></div>
+            </div>
+            <div class="progress-step active" data-step="1">
+                <div class="step-circle">01</div>
+                <div class="step-label">Upload Resume</div>
+            </div>
+            <div class="progress-step" data-step="2">
+                <div class="step-circle">02</div>
+                <div class="step-label">Job Description</div>
+            </div>
+            <div class="progress-step" data-step="3">
+                <div class="step-circle">03</div>
+                <div class="step-label">Choose Template</div>
+            </div>
+            <div class="progress-step" data-step="4">
+                <div class="step-circle">04</div>
+                <div class="step-label">Choose Font</div>
+            </div>
+            <div class="progress-step" data-step="5">
+                <div class="step-circle">05</div>
+                <div class="step-label">Preview & Download</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="wizard-container">
+        <!-- STEP 1: Upload Resume -->
+        <div class="step-content active" id="step1">
+            <div class="step-header">
+                <div class="step-number">01</div>
+                <h2 class="step-title">YOUR CURRENT RESUME</h2>
+            </div>
+
+            <div class="upload-area" id="resumeUpload">
+                <div class="upload-icon">UPLOAD</div>
+                <div class="upload-text">CLICK TO BROWSE OR DRAG AND DROP</div>
+                <div class="upload-hint">PDF, DOC, DOCX, TXT / MAX 10MB</div>
+                <input type="file" id="resumeFile" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+            </div>
+
+            <div class="file-preview" id="resumePreview">
+                <div class="file-name" id="resumeFileName"></div>
+                <div class="file-remove" id="resumeRemove">Remove file</div>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <textarea id="resumeText" placeholder="OR PASTE YOUR RESUME TEXT HERE"></textarea>
+                <div class="char-count"><span id="resumeCharCount">0</span> CHARACTERS</div>
+            </div>
+
+            <div class="button-group">
+                <div></div>
+                <button class="btn btn-primary" id="step1Next" disabled>Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 2: Job Description -->
+        <div class="step-content" id="step2">
+            <div class="step-header">
+                <div class="step-number">02</div>
+                <h2 class="step-title">TARGET JOB DESCRIPTION</h2>
+            </div>
+
+            <div class="upload-area" id="jdUpload">
+                <div class="upload-icon">UPLOAD</div>
+                <div class="upload-text">CLICK TO BROWSE OR DRAG AND DROP</div>
+                <div class="upload-hint">PDF, DOC, DOCX, TXT / MAX 10MB</div>
+                <input type="file" id="jdFile" accept=".pdf,.doc,.docx,.txt" style="display: none;">
+            </div>
+
+            <div class="file-preview" id="jdPreview">
+                <div class="file-name" id="jdFileName"></div>
+                <div class="file-remove" id="jdRemove">Remove file</div>
+            </div>
+
+            <div style="margin-top: 40px;">
+                <textarea id="jdText" placeholder="OR PASTE THE JOB DESCRIPTION HERE"></textarea>
+                <div class="char-count"><span id="jdCharCount">0</span> CHARACTERS</div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="step2Back">← Back</button>
+                <button class="btn btn-primary" id="step2Next" disabled>Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 3: Choose Template -->
+        <div class="step-content" id="step3">
+            <div class="step-header">
+                <div class="step-number">03</div>
+                <h2 class="step-title">CHOOSE TEMPLATE STYLE</h2>
+            </div>
+
+            <div class="checkbox-container">
+                <input type="checkbox" id="keepOriginal">
+                <label for="keepOriginal">
+                    KEEP MY ORIGINAL FORMAT
+                    <div class="checkbox-hint">Check this to preserve your current resume format and only optimize the content. Uncheck to apply a new professional template.</div>
+                </label>
+            </div>
+
+            <div class="selection-grid" id="templateGrid">
+                <div class="selection-card preview-minimal" data-template="minimal">
+                    <div class="template-preview">
+                        <div class="template-preview-content">
+                            <div class="preview-name">JOHN DOE</div>
+                            <div class="preview-section">
+                                <div class="preview-section-title">EXPERIENCE</div>
+                                <div style="font-size: 0.6rem; line-height: 1.3; margin-top: 2px;">
+                                    Senior Developer<br>
+                                    • Led team projects<br>
+                                    • Built solutions
+                                </div>
+                            </div>
+                            <div class="preview-section">
+                                <div class="preview-section-title">SKILLS</div>
+                                <div style="font-size: 0.6rem; margin-top: 2px;">
+                                    Python • JavaScript • React
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="template-name">MINIMAL</div>
+                    <div class="template-description">Clean and simple. Perfect for ATS systems. Best for traditional industries.</div>
+                </div>
+
+                <div class="selection-card preview-bold selected" data-template="bold">
+                    <div class="template-preview">
+                        <div class="template-preview-content">
+                            <div class="preview-name">JOHN DOE</div>
+                            <div style="font-size: 0.6rem; margin-bottom: 8px;">john@email.com | +1234567890</div>
+                            <div class="preview-section-title">EXPERIENCE</div>
+                            <div style="font-size: 0.6rem; line-height: 1.3; margin-bottom: 5px;">
+                                <strong>Senior Developer</strong><br>
+                                Company • 2020-Present
+                            </div>
+                            <div class="preview-section-title">SKILLS</div>
+                            <div style="font-size: 0.6rem;">
+                                Python • JavaScript • React
+                            </div>
+                        </div>
+                    </div>
+                    <div class="template-name">BOLD</div>
+                    <div class="template-description">Strong headers make sections stand out. Great for competitive fields and tech roles.</div>
+                </div>
+
+                <div class="selection-card preview-modern" data-template="modern">
+                    <div class="template-preview">
+                        <div class="template-preview-content">
+                            <div class="preview-name">JOHN DOE</div>
+                            <div class="preview-sidebar">
+                                <div style="font-size: 0.6rem; font-weight: 700; margin-bottom: 3px;">CONTACT</div>
+                                <div style="font-size: 0.55rem; line-height: 1.2; margin-bottom: 8px;">
+                                    email@mail.com<br>
+                                    +1234567890
+                                </div>
+                                <div style="font-size: 0.6rem; font-weight: 700; margin-bottom: 3px;">SKILLS</div>
+                                <div style="font-size: 0.55rem; line-height: 1.3;">
+                                    Python<br>
+                                    React<br>
+                                    Node.js
+                                </div>
+                            </div>
+                            <div>
+                                <div style="font-size: 0.65rem; font-weight: 700; margin-bottom: 3px;">EXPERIENCE</div>
+                                <div style="font-size: 0.55rem; line-height: 1.3;">
+                                    <strong>Developer</strong><br>
+                                    2020-Present<br>
+                                    Led team projects
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="template-name">MODERN</div>
+                    <div class="template-description">Two-column layout with sidebar. Eye-catching design for creative and startup roles.</div>
+                </div>
+
+                <div class="selection-card preview-classic" data-template="classic">
+                    <div class="template-preview">
+                        <div class="template-preview-content">
+                            <div class="preview-name">JOHN DOE</div>
+                            <div style="text-align: center; font-size: 0.6rem; margin-bottom: 8px;">
+                                john@email.com | +1234567890 | City, State
+                            </div>
+                            <div class="preview-section-title">Experience</div>
+                            <div style="font-size: 0.6rem; line-height: 1.3; margin-bottom: 8px;">
+                                <strong>Senior Developer</strong><br>
+                                Company Name, 2020-Present<br>
+                                • Led development team<br>
+                                • Managed projects
+                            </div>
+                            <div class="preview-section-title">Education</div>
+                            <div style="font-size: 0.6rem;">
+                                Bachelor of Science<br>
+                                University, 2018
+                            </div>
+                        </div>
+                    </div>
+                    <div class="template-name">CLASSIC</div>
+                    <div class="template-description">Traditional and conservative. Perfect for corporate, finance, and legal positions.</div>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="step3Back">← Back</button>
+                <button class="btn btn-primary" id="step3Next">Next →</button>
+            </div>
+        </div>
+
+        <!-- STEP 4: Choose Font -->
+        <div class="step-content" id="step4">
+            <div class="step-header">
+                <div class="step-number">04</div>
+                <h2 class="step-title">CHOOSE FONT STYLE</h2>
+            </div>
+
+            <div class="selection-grid" id="fontGrid">
+                <div class="selection-card selected" data-font="modern" style="padding: 30px 15px; text-align: center; background: #fff;">
+                    <h3 style="font-family: 'Roboto', sans-serif; font-size: 1.5rem; color: #000; margin-bottom: 10px; letter-spacing: 1px;">MODERN</h3>
+                    <p style="font-family: 'Open Sans', sans-serif; font-size: 0.8rem; color: #666;">Roboto / Open Sans</p>
+                </div>
+                <div class="selection-card" data-font="professional" style="padding: 30px 15px; text-align: center; background: #fff;">
+                    <h3 style="font-family: 'Helvetica', sans-serif; font-size: 1.5rem; color: #000; margin-bottom: 10px; letter-spacing: 1px;">PROFESSIONAL</h3>
+                    <p style="font-family: 'Georgia', serif; font-size: 0.8rem; color: #666;">Helvetica / Georgia</p>
+                </div>
+                <div class="selection-card" data-font="classic" style="padding: 30px 15px; text-align: center; background: #fff;">
+                    <h3 style="font-family: 'Times New Roman', serif; font-size: 1.5rem; color: #000; margin-bottom: 10px; letter-spacing: 1px;">CLASSIC</h3>
+                    <p style="font-family: 'Arial', sans-serif; font-size: 0.8rem; color: #666;">Times / Arial</p>
+                </div>
+                <div class="selection-card" data-font="tech" style="padding: 30px 15px; text-align: center; background: #fff;">
+                    <h3 style="font-family: 'Space Mono', monospace; font-size: 1.5rem; color: #000; margin-bottom: 10px; letter-spacing: 1px;">TECH</h3>
+                    <p style="font-family: 'Inter', sans-serif; font-size: 0.8rem; color: #666;">Space Mono / Inter</p>
+                </div>
+            </div>
+
+            <div class="button-group">
+                <button class="btn" id="step4Back">← Back</button>
+                <button class="btn btn-primary" id="step4Generate">Generate Resume →</button>
+            </div>
+        </div>
+
+        <!-- STEP 5: Preview & Download -->
+        <div class="step-content" id="step5">
+            <div class="step-header">
+                <div class="step-number">05</div>
+                <h2 class="step-title">YOUR OPTIMIZED RESUME</h2>
+            </div>
+
+            <div id="loadingState" class="loading" style="display: none;">
+                Generating your ATS-optimized resume
+            </div>
+
+            <div id="previewState" style="display: none;">
+                <div class="pdf-preview-container">
+                    <canvas id="pdfCanvas"></canvas>
+                </div>
+
+                <div class="download-section">
+                    <h3>Download Your Resume</h3>
+                    <div class="download-buttons">
+                        <button class="btn btn-primary" id="downloadPDF">Download PDF</button>
+                        <button class="btn" id="downloadTXT">Download TXT</button>
+                        <button class="btn" id="saveResume" style="display: none;">Save to Account</button>
+                    </div>
+                </div>
+
+                <div class="button-group" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-top: 30px;">
+                    <button class="btn btn-primary" id="generateCoverLetter">
+                        <div style="font-size: 1.1rem; margin-bottom: 3px;">📝 Generate Cover Letter</div>
+                        <div style="font-size: 0.7rem; opacity: 0.8;">Optional - Boost your chances</div>
+                    </button>
+                    <button class="btn btn-primary" id="findJobs">
+                        <div style="font-size: 1.1rem; margin-bottom: 3px;">🎯 Job Suggestions</div>
+                        <div style="font-size: 0.7rem; opacity: 0.8;">Real-time job openings</div>
+                    </button>
+                </div>
+                <div class="button-group" style="margin-top: 20px;">
+                    <button class="btn" id="step5Back">← Start Over</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+
+        // State
+        let currentStep = 1;
+        let resumeData = {
+            resumeText: '',
+            jdText: '',
+            template: 'bold',
+            font: 'modern',
+            keepOriginal: false
+        };
+        let currentUser = null;
+        let generatedResume = '';
+
+        // Check login status
+        async function checkLoginStatus() {
+            try {
+                const response = await fetch('/auth/check', { credentials: 'include' });
+                const data = await response.json();
+                
+                if (data.loggedIn) {
+                    currentUser = data.user;
+                    const displayName = data.user.name || data.user.email;
+                    document.getElementById('userInfo').textContent = `Welcome, ${displayName}`;
+                    document.getElementById('userInfo').classList.add('show');
+                    document.getElementById('loginLink').style.display = 'none';
+                    document.getElementById('dashboardLink').style.display = 'inline-block';
+                    document.getElementById('logoutBtn').style.display = 'inline-block';
+                    document.getElementById('saveResume').style.display = 'inline-block';
+
+                    // Check if viewing a saved resume
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const viewId = urlParams.get('view');
+                    if (viewId) {
+                        await loadSavedResume(viewId);
+                    }
+                } else {
+                    document.getElementById('loginLink').style.display = 'inline-block';
+                    document.getElementById('dashboardLink').style.display = 'none';
+                    document.getElementById('logoutBtn').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('Error checking login status:', error);
+            }
+        }
+
+        // Load saved resume and jump to preview
+        async function loadSavedResume(id) {
+            try {
+                const response = await fetch(`/auth/resumes/${id}`, { credentials: 'include' });
+                const data = await response.json();
+                
+                if (data.resume) {
+                    const resume = data.resume;
+                    
+                    // Set resume data
+                    generatedResume = resume.content;
+                    resumeData.template = resume.template;
+                    resumeData.font = resume.font;
+
+                    // Jump directly to Step 5 (preview)
+                    await createAndPreviewPDF(generatedResume);
+                    goToStep(5);
+                }
+            } catch (error) {
+                console.error('Error loading saved resume:', error);
+                alert('Failed to load resume');
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            try {
+                await fetch('/auth/logout', { method: 'POST', credentials: 'include' });
+                window.location.href = '/';
+            } catch (error) {
+                console.error('Logout error:', error);
+                window.location.href = '/';
+            }
+        });
+
+        checkLoginStatus();
+
+        // Navigation
+        function goToStep(step) {
+            document.querySelectorAll('.step-content').forEach(s => s.classList.remove('active'));
+            document.getElementById(`step${step}`).classList.add('active');
+
+            document.querySelectorAll('.progress-step').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.progress-step').forEach((s, i) => {
+                if (i < step - 1) s.classList.add('completed');
+                else s.classList.remove('completed');
+            });
+            document.querySelector(`[data-step="${step}"]`).classList.add('active');
+
+            const progress = ((step - 1) / 4) * 100;
+            document.getElementById('progressFill').style.width = progress + '%';
+
+            currentStep = step;
+            window.scrollTo(0, 0);
+        }
+
+        // STEP 1: Resume Upload
+        setupFileUpload('resume', 'resumeUpload', 'resumeFile', 'resumePreview', 'resumeFileName', 'resumeRemove', 'resumeText');
+        
+        document.getElementById('resumeText').addEventListener('input', (e) => {
+            document.getElementById('resumeCharCount').textContent = e.target.value.length;
+            resumeData.resumeText = e.target.value;
+            validateStep1();
+        });
+
+        document.getElementById('step1Next').addEventListener('click', () => {
+            if (resumeData.resumeText) goToStep(2);
+        });
+
+        function validateStep1() {
+            document.getElementById('step1Next').disabled = !resumeData.resumeText;
+        }
+
+        // STEP 2: JD Upload
+        setupFileUpload('jd', 'jdUpload', 'jdFile', 'jdPreview', 'jdFileName', 'jdRemove', 'jdText');
+
+        document.getElementById('jdText').addEventListener('input', (e) => {
+            document.getElementById('jdCharCount').textContent = e.target.value.length;
+            resumeData.jdText = e.target.value;
+            validateStep2();
+        });
+
+        document.getElementById('step2Back').addEventListener('click', () => goToStep(1));
+        document.getElementById('step2Next').addEventListener('click', () => {
+            if (resumeData.jdText) goToStep(3);
+        });
+
+        function validateStep2() {
+            document.getElementById('step2Next').disabled = !resumeData.jdText;
+        }
+
+        // STEP 3: Template Selection
+        document.querySelectorAll('#templateGrid .selection-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('#templateGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                resumeData.template = card.dataset.template;
+            });
+        });
+
+        document.getElementById('keepOriginal').addEventListener('change', (e) => {
+            resumeData.keepOriginal = e.target.checked;
+        });
+
+        document.getElementById('step3Back').addEventListener('click', () => goToStep(2));
+        document.getElementById('step3Next').addEventListener('click', () => goToStep(4));
+
+        // STEP 4: Font Selection
+        document.querySelectorAll('#fontGrid .selection-card').forEach(card => {
+            card.addEventListener('click', () => {
+                document.querySelectorAll('#fontGrid .selection-card').forEach(c => c.classList.remove('selected'));
+                card.classList.add('selected');
+                resumeData.font = card.dataset.font;
+            });
+        });
+
+        document.getElementById('step4Back').addEventListener('click', () => goToStep(3));
+        document.getElementById('step4Generate').addEventListener('click', generateResume);
+
+        // STEP 5: Generate & Preview
+        async function generateResume() {
+            goToStep(5);
+            document.getElementById('loadingState').style.display = 'block';
+            document.getElementById('previewState').style.display = 'none';
+
+            try {
+                const response = await fetch('/api/optimize-resume', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        resume: resumeData.resumeText,
+                        jobDescription: resumeData.jdText,
+                        template: resumeData.template,
+                        font: resumeData.font,
+                        keepOriginal: resumeData.keepOriginal
+                    })
+                });
+
+                const data = await response.json();
+                generatedResume = data.optimizedResume;
+
+                // Create PDF and show preview
+                await createAndPreviewPDF(generatedResume);
+
+                document.getElementById('loadingState').style.display = 'none';
+                document.getElementById('previewState').style.display = 'block';
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Failed to generate resume. Please try again.');
+                goToStep(1);
+            }
+        }
+
+        async function createAndPreviewPDF(text) {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            
+            // Clean up text - remove markdown formatting
+            text = text
+                .replace(/_{2,}/g, '') // Remove underscores ___
+                .replace(/\*{1,}/g, '') // Remove asterisks **
+                .replace(/^[\*\-]\s/gm, '• ') // Convert * or - to bullets
+                .trim();
+            
+            // Font mapping
+            const fonts = {
+                'modern': { heading: 'helvetica', body: 'helvetica' },
+                'professional': { heading: 'helvetica', body: 'times' },
+                'classic': { heading: 'times', body: 'times' },
+                'tech': { heading: 'courier', body: 'helvetica' }
+            };
+
+            const selectedFont = fonts[resumeData.font] || fonts.modern;
+            
+            // Parse resume sections
+            const lines = text.split('\n');
+            let yPos = 20;
+            const pageWidth = doc.internal.pageSize.getWidth();
+            const margin = 15;
+            const contentWidth = pageWidth - (margin * 2);
+
+            // Helper function to detect if line is a section header
+            function isSectionHeader(line) {
+                const trimmed = line.trim();
+                return trimmed === trimmed.toUpperCase() && 
+                       trimmed.length > 0 && 
+                       trimmed.length < 40 &&
+                       !trimmed.startsWith('•') &&
+                       !trimmed.includes('@') &&
+                       !trimmed.includes('|');
+            }
+
+            // Template-specific styling
+            if (resumeData.template === 'bold') {
+                // BOLD template: Black headers with white text
+                for (let line of lines) {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                    }
+
+                    if (isSectionHeader(line)) {
+                        // Black background header
+                        doc.setFillColor(0, 0, 0);
+                        doc.rect(margin, yPos - 5, contentWidth, 8, 'F');
+                        doc.setTextColor(255, 255, 255);
+                        doc.setFont(selectedFont.heading, 'bold');
+                        doc.setFontSize(11);
+                        doc.text(line.trim(), margin + 2, yPos);
+                        doc.setTextColor(0, 0, 0);
+                        yPos += 12;
+                    } else if (line.trim().length > 0) {
+                        doc.setFont(selectedFont.body, 'normal');
+                        doc.setFontSize(10);
+                        const wrappedLines = doc.splitTextToSize(line, contentWidth);
+                        doc.text(wrappedLines, margin, yPos);
+                        yPos += wrappedLines.length * 5 + 1;
+                    } else {
+                        yPos += 2;
+                    }
+                }
+            } else if (resumeData.template === 'minimal') {
+                // MINIMAL template: Clean with left border
+                doc.setDrawColor(0, 0, 0);
+                doc.setLineWidth(2);
+                doc.line(margin, 15, margin, 280);
+
+                for (let line of lines) {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        doc.line(margin, 15, margin, 280);
+                        yPos = 20;
+                    }
+
+                    if (isSectionHeader(line)) {
+                        doc.setFont(selectedFont.heading, 'bold');
+                        doc.setFontSize(11);
+                        doc.text(line.trim(), margin + 5, yPos);
+                        doc.setLineWidth(0.3);
+                        doc.line(margin + 5, yPos + 1, pageWidth - margin, yPos + 1);
+                        doc.setLineWidth(2);
+                        yPos += 10;
+                    } else if (line.trim().length > 0) {
+                        doc.setFont(selectedFont.body, 'normal');
+                        doc.setFontSize(10);
+                        const wrappedLines = doc.splitTextToSize(line, contentWidth - 10);
+                        doc.text(wrappedLines, margin + 5, yPos);
+                        yPos += wrappedLines.length * 5 + 1;
+                    } else {
+                        yPos += 2;
+                    }
+                }
+            } else if (resumeData.template === 'modern') {
+                // MODERN template: Centered header with gray sections
+                let isNameSection = true;
+                
+                for (let line of lines) {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                        isNameSection = false;
+                    }
+
+                    if (isSectionHeader(line)) {
+                        if (isNameSection && !line.includes('SUMMARY') && !line.includes('PROFESSIONAL')) {
+                            // Center the name
+                            doc.setFont(selectedFont.heading, 'bold');
+                            doc.setFontSize(16);
+                            doc.text(line.trim(), pageWidth / 2, yPos, { align: 'center' });
+                            doc.setLineWidth(0.5);
+                            doc.line(margin + 20, yPos + 2, pageWidth - margin - 20, yPos + 2);
+                            yPos += 12;
+                            isNameSection = false;
+                        } else {
+                            // Gray section headers
+                            doc.setFont(selectedFont.heading, 'bold');
+                            doc.setFontSize(11);
+                            doc.setTextColor(80, 80, 80);
+                            doc.text(line.trim(), margin, yPos);
+                            doc.setTextColor(0, 0, 0);
+                            yPos += 10;
+                        }
+                    } else if (line.trim().length > 0) {
+                        doc.setFont(selectedFont.body, 'normal');
+                        doc.setFontSize(10);
+                        const wrappedLines = doc.splitTextToSize(line, contentWidth);
+                        doc.text(wrappedLines, margin, yPos);
+                        yPos += wrappedLines.length * 5 + 1;
+                    } else {
+                        yPos += 2;
+                    }
+                }
+            } else if (resumeData.template === 'classic') {
+                // CLASSIC template: Centered header, underlined sections
+                let isNameSection = true;
+                
+                for (let line of lines) {
+                    if (yPos > 270) {
+                        doc.addPage();
+                        yPos = 20;
+                        isNameSection = false;
+                    }
+
+                    if (isSectionHeader(line)) {
+                        if (isNameSection && !line.includes('SUMMARY') && !line.includes('PROFESSIONAL')) {
+                            // Centered name (Times, large)
+                            doc.setFont('times', 'bold');
+                            doc.setFontSize(18);
+                            doc.text(line.trim(), pageWidth / 2, yPos, { align: 'center' });
+                            yPos += 8;
+                            isNameSection = false;
+                        } else {
+                            // Underlined section headers
+                            doc.setFont('times', 'bold');
+                            doc.setFontSize(12);
+                            const textWidth = doc.getTextWidth(line.trim());
+                            doc.text(line.trim(), margin, yPos);
+                            doc.setLineWidth(0.5);
+                            doc.line(margin, yPos + 1, margin + textWidth, yPos + 1);
+                            yPos += 10;
+                        }
+                    } else if (line.trim().length > 0) {
+                        doc.setFont('times', 'normal');
+                        doc.setFontSize(11);
+                        const wrappedLines = doc.splitTextToSize(line, contentWidth);
+                        doc.text(wrappedLines, margin, yPos);
+                        yPos += wrappedLines.length * 5.5 + 1;
+                    } else {
+                        yPos += 3;
+                    }
+                }
+            }
+
+            // Convert to blob and display
+            const pdfBlob = doc.output('blob');
+            const pdfURL = URL.createObjectURL(pdfBlob);
+
+            const loadingTask = pdfjsLib.getDocument(pdfURL);
+            const pdf = await loadingTask.promise;
+            const page = await pdf.getPage(1);
+
+            const canvas = document.getElementById('pdfCanvas');
+            const context = canvas.getContext('2d');
+            const viewport = page.getViewport({ scale: 1.3 }); // Reduced from 1.5 to 1.3
+
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+
+            // Store for download
+            window.generatedPDF = doc;
+        }
+
+        // Cover Letter PDF Generation
+        // Downloads
+        document.getElementById('downloadPDF').addEventListener('click', () => {
+            if (window.generatedPDF) {
+                window.generatedPDF.save('optimized-resume.pdf');
+            }
+        });
+
+        document.getElementById('downloadTXT').addEventListener('click', () => {
+            const blob = new Blob([generatedResume], { type: 'text/plain' });
+            saveAs(blob, 'optimized-resume.txt');
+        });
+
+        document.getElementById('saveResume').addEventListener('click', async () => {
+            if (!currentUser) {
+                alert('Please login to save resumes');
+                window.location.href = '/';
+                return;
+            }
+
+            const title = prompt('Enter a title for this resume:');
+            if (!title) return;
+
+            try {
+                const response = await fetch('/auth/resumes/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        title: title,
+                        content: generatedResume,
+                        template: resumeData.template,
+                        font: resumeData.font
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Resume saved successfully!');
+                } else {
+                    alert('Failed to save resume');
+                }
+            } catch (error) {
+                console.error('Save error:', error);
+                alert('Failed to save resume');
+            }
+        });
+
+        document.getElementById('step5Back').addEventListener('click', () => {
+            resumeData = {
+                resumeText: '',
+                jdText: '',
+                template: 'bold',
+                font: 'modern',
+                keepOriginal: false
+            };
+            generatedResume = '';
+            document.getElementById('resumeText').value = '';
+            document.getElementById('jdText').value = '';
+            goToStep(1);
+        });
+
+        // Cover Letter Generation - Navigate to separate page
+        document.getElementById('generateCoverLetter').addEventListener('click', async () => {
+            // Store data in sessionStorage for cover-letter.html to access
+            sessionStorage.setItem('generatedResume', generatedResume);
+            sessionStorage.setItem('jobDescription', resumeData.jdText);
+            sessionStorage.setItem('template', resumeData.template);
+            sessionStorage.setItem('font', resumeData.font);
+            
+            // Navigate to cover letter page
+            window.location.href = '/cover-letter.html';
+        });
+
+        // Job Suggestions - Navigate to separate page
+        document.getElementById('findJobs').addEventListener('click', () => {
+            sessionStorage.setItem('generatedResume', generatedResume);
+            sessionStorage.setItem('jobDescription', resumeData.jdText);
+            
+            window.location.href = '/job-suggestions.html';
+        });
+
+        // File Upload Helper
+        function setupFileUpload(prefix, uploadId, fileId, previewId, fileNameId, removeId, textId) {
+            const uploadArea = document.getElementById(uploadId);
+            const fileInput = document.getElementById(fileId);
+            const preview = document.getElementById(previewId);
+            const fileName = document.getElementById(fileNameId);
+            const removeBtn = document.getElementById(removeId);
+            const textarea = document.getElementById(textId);
+
+            uploadArea.addEventListener('click', () => fileInput.click());
+
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+                handleFile(e.dataTransfer.files[0]);
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                if (e.target.files[0]) handleFile(e.target.files[0]);
+            });
+
+            removeBtn.addEventListener('click', () => {
+                fileInput.value = '';
+                preview.classList.remove('show');
+                textarea.value = '';
+                if (prefix === 'resume') {
+                    resumeData.resumeText = '';
+                    validateStep1();
+                } else {
+                    resumeData.jdText = '';
+                    validateStep2();
+                }
+            });
+
+            async function handleFile(file) {
+                fileName.textContent = file.name;
+                preview.classList.add('show');
+
+                const reader = new FileReader();
+                reader.onload = async (e) => {
+                    let text = '';
+                    
+                    if (file.type === 'text/plain') {
+                        text = e.target.result;
+                    } else if (file.type === 'application/pdf') {
+                        const pdf = await pdfjsLib.getDocument({ data: e.target.result }).promise;
+                        for (let i = 1; i <= pdf.numPages; i++) {
+                            const page = await pdf.getPage(i);
+                            const content = await page.getTextContent();
+                            text += content.items.map(item => item.str).join(' ') + '\n';
+                        }
+                    } else if (file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' || 
+                               file.name.endsWith('.docx')) {
+                        // Parse DOCX
+                        const arrayBuffer = e.target.result;
+                        const result = await mammoth.extractRawText({ arrayBuffer: arrayBuffer });
+                        text = result.value;
+                    }
+
+                    textarea.value = text;
+                    if (prefix === 'resume') {
+                        resumeData.resumeText = text;
+                        document.getElementById('resumeCharCount').textContent = text.length;
+                        validateStep1();
+                    } else {
+                        resumeData.jdText = text;
+                        document.getElementById('jdCharCount').textContent = text.length;
+                        validateStep2();
+                    }
+                };
+
+                if (file.type === 'application/pdf' || 
+                    file.type === 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' ||
+                    file.name.endsWith('.docx')) {
+                    reader.readAsArrayBuffer(file);
+                } else {
+                    reader.readAsText(file);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
