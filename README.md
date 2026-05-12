@@ -1,64 +1,123 @@
 # ResumeCraft
 
-ResumeCraft is a web-based tool that helps users generate resumes tailored to specific job descriptions.
+ResumeCraft is an AI-powered career platform designed to help job seekers go beyond just resume building.
 
-Many students and early professionals struggle with creating resumes that align with what recruiters actually look for. This project aims to simplify that process by allowing users to input a job description and generate a structured, relevant resume accordingly.
-
----
-
-## 🚀 Features
-
-- Generate resumes based on job descriptions
-- Multiple resume templates (in progress)
-- Custom font selection (in progress)
-- Simple and user-friendly interface
+Instead of forcing users through one fixed process, ResumeCraft gives users the flexibility to choose what they need after logging in.
 
 ---
 
-## 🛠️ Tech Stack
+## Core Features
 
-- HTML, CSS, JavaScript
+### 1. Full Resume Builder
+Users can create professional resumes using a guided multi-step flow.
+
+Includes:
+- Personal Information
+- Education
+- Experience
+- Skills
+- Projects / Certifications
+- Resume Preview & Export
+
+---
+
+### 2. Cover Letter Generator
+Users who already have a resume can upload it and generate a tailored cover letter.
+
+Inputs:
+- Resume Upload
+- Job Role
+- Company Name
+- Additional Context (Optional)
+
+Output:
+- Personalized cover letter aligned with the selected role.
+
+---
+
+### 3. AI Job Suggestions
+Users can upload their resume and receive:
+
+- Minimum 10 relevant job suggestions
+- Real-time job links
+- Direct company career page redirects
+- Resume Match Score / Fit Score
+
+Goal:
+Help users discover opportunities that match their profile instead of manually searching job boards.
+
+---
+
+### 4. Applied Jobs Tracker
+Every time a user clicks "Apply Now", the application is tracked in their dashboard.
+
+Users can monitor:
+- Total applications submitted
+- Recently applied roles
+- Companies applied to
+- Application history
+
+This improves engagement and encourages users to return.
+
+---
+
+## User Flow
+
+Login → Dashboard → Choose Your Path
+
+1. Full Resume Builder  
+2. Cover Letter Only  
+3. Job Suggestions Only  
+
+Each flow is designed independently so users don't need to repeat unnecessary steps.
+
+---
+
+## Tech Stack
+
+Frontend:
+- HTML
+- CSS
+- JavaScript
+
+Backend:
 - Node.js
+- Express.js
+
+Integrations:
+- Google Authentication
+- LinkedIn Authentication
+- Jobs API
+- AI Model Integration
+
+Cloud / Infrastructure:
+- AWS (in progress)
 
 ---
 
-## 📌 Current Status
+## Future Roadmap
 
-This project is currently a **work in progress**.
+Planned improvements:
 
-Completed:
-- Basic structure and functionality
-- Initial frontend setup
-
-In Progress:
-- UI improvements
-- Resume generation logic
-- Template selection system
+- ATS Resume Scoring
+- Resume Optimization Suggestions
+- Industry-specific Resume Templates
+- Interview Preparation Assistant
+- Job Application Analytics
+- Premium Career Tools
 
 ---
 
-## 🎯 Goal
+## Vision
 
-The goal of ResumeCraft is to make resume building easier and more accessible, especially for students who may not know how to tailor their resumes for different job roles.
+ResumeCraft aims to become more than a resume builder.
 
----
+The goal is to build a career operating system where users can:
 
-## 💡 Future Improvements
-
-- More professional templates
-- Better job description analysis
-- Enhanced customization options
+Build → Apply → Track → Improve → Get Hired
 
 ---
 
-## 🤝 Support
+## Author
 
-If you find this project helpful, feel free to support or share it.  
-Any kind of encouragement helps keep the project going.
-
----
-
-## 📬 Contact
-For feedback, suggestions, or collaboration opportunities, feel free to reach out:
-
-📧 arunsivateja44@gmail.com
+Built by Arun Sivateja
